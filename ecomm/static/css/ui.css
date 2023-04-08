@@ -1347,6 +1347,10 @@ a[class*=card]:hover .title {
   padding: 45px 0;
 }
 
+.section-banner {
+  background-color: #75D5DA;
+}
+
 /* ================== PAGE DETAILS ==================  */
 .gallery-wrap .img-big-wrap {
   margin-bottom: 10px;

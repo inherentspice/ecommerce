@@ -38,3 +38,5 @@ share/python-wheels/
 *.egg
 MANIFEST
 /static
+
+.env

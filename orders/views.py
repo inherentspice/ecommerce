@@ -1,10 +1,28 @@
 from django.shortcuts import render, redirect
 from carts.models import CartItem
 from .forms import OrderForm
-from .models import Order
+from .models import Order, Payment
 import datetime
+import string
+import random
+def payments(request, order_number):
+    def generate_payment_id():
+        source = string.ascii_letters + string.digits
+        result_str = ''.join((random.choice(source) for i in range(12)))
+        return result_str
 
-def payments(request):
+    order = Order.objects.get(user=request.user, is_ordered=False, order_number=order_number)
+    payment = Payment(
+        user = request.user,
+        payment_id = generate_payment_id(),
+        payment_method = 'Paypal',
+        amount_paid = order.order_total,
+        status = 'Completed'
+    )
+    payment.save()
+    order.payment = payment
+    order.is_ordered = True
+    order.save()
     return render(request, 'orders/payments.html')
 
 def place_order(request, total=0, quantity=0):

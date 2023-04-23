@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from carts.models import CartItem
 from .forms import OrderForm
-from .models import Order, Payment
+from .models import Order, Payment, OrderProduct
 import datetime
 import string
 import random
+
 def payments(request, order_number):
     def generate_payment_id():
         source = string.ascii_letters + string.digits
@@ -23,6 +24,26 @@ def payments(request, order_number):
     order.payment = payment
     order.is_ordered = True
     order.save()
+    # Move the cart items to Order Product Table
+    cart_items = CartItem.objects.filter(user=request.user)
+    for item in cart_items:
+        orderproduct = OrderProduct()
+        orderproduct.order_id = order.id
+        orderproduct.payment = payment
+        orderproduct.user_id = request.user.id
+        orderproduct.product_id = item.product_id
+        orderproduct.quantity = item.quantity
+        orderproduct.product_price = item.product.price
+        orderproduct.ordered = True
+        orderproduct.save()
+
+
+    # Reduce the quantity of available products
+
+    # Clear the cart
+
+    # Send order recieved email to customer
+
     return render(request, 'orders/payments.html')
 
 def place_order(request, total=0, quantity=0):

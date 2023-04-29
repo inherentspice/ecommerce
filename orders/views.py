@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect
 from carts.models import CartItem
 from .forms import OrderForm
 from .models import Order, Payment, OrderProduct
+from store.models import Product
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 import datetime
 import string
 import random
@@ -37,14 +40,42 @@ def payments(request, order_number):
         orderproduct.ordered = True
         orderproduct.save()
 
+        cart_item = CartItem.objects.get(id=item.id)
+        product_variation = cart_item.variations.all()
+        orderproduct = OrderProduct.objects.get(id=orderproduct.id)
+        orderproduct.variation.set(product_variation)
+        orderproduct.save()
+
 
     # Reduce the quantity of available products
+        product = Product.objects.get(id=item.product_id)
+        product.stock -= item.quantity
+        product.save()
+
 
     # Clear the cart
+    CartItem.objects.filter(user=request.user).delete()
 
     # Send order recieved email to customer
+    mail_subject = 'Thank you for your order'
+    message = render_to_string('orders/order_recieved_email.html', {
+                'user': request.user,
+                'order': order
+            })
+    to_email = request.user.email
+    send_email = EmailMessage(mail_subject, message, to=[to_email])
+    send_email.send()
 
-    return render(request, 'orders/payments.html')
+    ordered_products = OrderProduct.objects.filter(order_id=order.id)
+
+    context = {
+        'order': order,
+        'ordered_products': ordered_products,
+        'order_number': order_number,
+        'transID': payment.id
+    }
+
+    return render(request, 'orders/order_complete.html', context)
 
 def place_order(request, total=0, quantity=0):
     current_user = request.user
@@ -100,3 +131,6 @@ def place_order(request, total=0, quantity=0):
             return render(request, 'orders/payments.html', context)
     else:
         return redirect('checkout')
+
+def order_complete(request):
+    return render(request, 'orders/order_complete.html')

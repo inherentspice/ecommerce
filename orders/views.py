@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect
 from carts.models import CartItem
 from .forms import OrderForm
 from .models import Order, Payment, OrderProduct
+from store.models import Product
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 import datetime
 import string
 import random
@@ -45,10 +48,23 @@ def payments(request, order_number):
 
 
     # Reduce the quantity of available products
+        product = Product.objects.get(id=item.product_id)
+        product.stock -= item.quantity
+        product.save()
+
 
     # Clear the cart
+    CartItem.objects.filter(user=request.user).delete()
 
     # Send order recieved email to customer
+    mail_subject = 'Thank you for your order'
+    message = render_to_string('orders/order_recieved_email.html', {
+                'user': request.user,
+                'order': order
+            })
+    to_email = request.user.email
+    send_email = EmailMessage(mail_subject, message, to=[to_email])
+    send_email.send()
 
     return render(request, 'orders/payments.html')
 

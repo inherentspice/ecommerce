@@ -41,7 +41,10 @@ def product_detail(request, category_slug, product_slug):
         raise e
 
     try:
-        orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
+        if request.user.is_authenticated:
+            orderproduct = OrderProduct.objects.filter(user=request.user, product_id=single_product.id).exists()
+        else:
+            orderproduct = None
     except OrderProduct.DoesNotExist:
         orderproduct = None
 

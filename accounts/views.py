@@ -11,6 +11,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+from orders.models import Order
 import requests
 
 def register(request):
@@ -135,7 +136,12 @@ def activate(request, uidb64, token):
 
 @login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id, is_ordered=True)
+    orders_count = orders.count()
+    context = {
+        'orders_count': orders_count,
+    }
+    return render(request, 'accounts/dashboard.html', context)
 
 def forgotPassword(request):
     if request.method == 'POST':

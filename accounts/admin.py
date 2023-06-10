@@ -14,8 +14,11 @@ class AccountAdmin(UserAdmin):
     fieldsets = ()
 
 class UserProfileAdmin(admin.ModelAdmin):
-    def thumbnail(self, object):
-        return format_html('<img src="{}" width="30" style="border-radius: 50%;">'.format(object.profile_picture.url))
+    def thumbnail(self, obj):
+        if obj.profile_picture:
+            return format_html('<img src="{}" width="30" style="border-radius: 50%;">'.format(obj.profile_picture.url))
+        else:
+            return None
     thumbnail.short_description = 'Profile Picture'
     list_display = ('thumbnail', 'user', 'city', 'state', 'country')
 
